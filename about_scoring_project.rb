@@ -1,5 +1,5 @@
 require File.expand_path(File.dirname(__FILE__) + '/neo')
-
+require 'pry'
 # Greed is a dice game where you roll up to five dice to accumulate
 # points.  The following "score" function will be used to calculate the
 # score of a single roll of the dice.
@@ -28,9 +28,59 @@ require File.expand_path(File.dirname(__FILE__) + '/neo')
 # More scoring examples are given in the tests below:
 #
 # Your goal is to write the score method.
+#
+# Check for 3 of a kind, add to score
+#   IF 3 of a kind, check other two for 1s or 5s, return score
+#
+# Check for count of 1s or 5s if not part of 3 of a kind
 
 def score(dice)
-  # You need to write this method
+  score = 0
+
+  def group_like_kinds(array)
+    array.group_by { |n| n }
+  end
+
+  def grab_three_of_a_kind_number(hash)
+    hash.select { |k,v| v.count >= 3 }.keys.first
+  end
+
+  def three_of_a_kind?(array)
+    grouped = group_like_kinds(array)
+    !!grab_three_of_a_kind_number(grouped)
+  end
+
+  def three_of_a_kind_points(number)
+    number == 1 ? 1000 : number * 100
+  end
+
+  def leftover_points(array)
+    points = 0
+    grouped = group_like_kinds(array)
+
+    points += grouped[1].count * 100 unless grouped[1].nil?
+    points += grouped[5].count * 50 unless grouped[5].nil?
+
+    return points
+  end
+
+  # runner code
+  if three_of_a_kind?(dice)
+    grouped = group_like_kinds(dice)
+    number = grab_three_of_a_kind_number(grouped)
+    score += three_of_a_kind_points(number)
+
+    set_of_three = grouped[number][0..2]
+    leftovers = dice.clone
+    set_of_three.each do |el|
+      leftovers.delete_at(leftovers.index(el))
+    end
+    score += leftover_points(leftovers)
+  else
+    score += leftover_points(dice)
+  end
+
+  return score
 end
 
 class AboutScoringProject < Neo::Koan
